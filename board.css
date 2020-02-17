@@ -36,17 +36,17 @@ body {
 
 /* Player 0 (no player) will have a light-grey background */
 .player0 {
-  background-color: #DDDDDD; /* hex colors were used, but rgb/rgba could be used as well */
+  background-color: #DDDDDD;
 }
 
-/* player 1 will have a red background */
+/* player 1 will have a purple background */
 .player1 {
-  background-color: purple;
+  background-color: red;
 }
 
-/* player 2 will have a blue background */
+/* player 2 will have a orange background */
 .player2 {
-  background-color: yellow;	
+  background-color: blue;	
 }
 
 /* 
