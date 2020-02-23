@@ -42,11 +42,15 @@ body {
 /* player 1 will have a purple background */
 .player1 {
   background-color: red;
+  padding: 5px;
+  border-radius: 1px;
 }
 
 /* player 2 will have a orange background */
 .player2 {
   background-color: blue;	
+  padding: 5px;
+  border-radius: 1px;
 }
 
 /* 
@@ -57,4 +61,8 @@ body {
   border: 1px solid #555555;
   height: 36px;
   width: 36px;
+}
+
+#game_table {
+  margin-top: 10px;
 }

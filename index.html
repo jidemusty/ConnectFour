@@ -23,6 +23,9 @@
           game pieces. 
         -->
 
+        <!-- The game_info div displays game info -->
+			  <div id="game_info"></div>
+
         <table id="game_table">
           <thead>
             <tr>
@@ -102,6 +105,7 @@
           
           drawBoard(); // call the function to draw the board.				
           activePlayer = 1; //set the first player as their turn
+          setUpTurn();
 			  }
 
         /* 
@@ -126,6 +130,14 @@
           }
         }
 
+        /* this method will display who is the active player */
+        function setUpTurn() {
+          if (isGameActive) {
+            document.getElementById('game_info').innerHTML = 
+              "Current Player: " + activePlayer + " <span class='player" + activePlayer + "'>(" + playerColor[activePlayer] + ")</span>";
+          }
+        }
+
         /* 
           this function implements the drop function.
           a piece is dropped to the lowest available
@@ -147,7 +159,10 @@
               drawBoard();
 
               // change player's turn
-              activePlayer = activePlayer == 1 ? 2 : 1 
+              activePlayer = activePlayer == 1 ? 2 : 1
+
+              // display active player
+              setUpTurn();
               
               return true;
             }
