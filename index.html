@@ -36,13 +36,13 @@
                 below, but since it was just 7, it wouldn't really save code. 
               -->
               
-              <td><button onclick="drop(0);">Drop</button></td>
-              <td><button onclick="drop(1);">Drop</button></td>
-              <td><button onclick="drop(2);">Drop</button></td>
-              <td><button onclick="drop(3);">Drop</button></td>
-              <td><button onclick="drop(4);">Drop</button></td>
-              <td><button onclick="drop(5);">Drop</button></td>
-              <td><button onclick="drop(6);">Drop</button></td>
+              <td><button class="drop" onclick="drop(0);">Drop</button></td>
+              <td><button class="drop" onclick="drop(1);">Drop</button></td>
+              <td><button class="drop" onclick="drop(2);">Drop</button></td>
+              <td><button class="drop" onclick="drop(3);">Drop</button></td>
+              <td><button class="drop" onclick="drop(4);">Drop</button></td>
+              <td><button class="drop" onclick="drop(5);">Drop</button></td>
+              <td><button class="drop" onclick="drop(6);">Drop</button></td>
             </tr>
           </thead>
 
@@ -151,7 +151,7 @@
 
                 if (gameBoard[row][col] == i) {
                   if ((gameBoard[row][col + 1] == i) && (gameBoard[row][col + 2] == i) && (gameBoard[row][col + 3] == i)) {
-                    //endGame(i); //a match has been made, so run EndGame with the player that had the win
+                    endGame(i); //a match has been made, so run EndGame with the player that had the win
                     return true; //stop checking for a win - the game is over.
                   }
                 }
@@ -170,7 +170,7 @@
 
                 if (gameBoard[row][col] == i) {
                   if ((gameBoard[row + 1][col] == i) && (gameBoard[row + 2][col] == i) && (gameBoard[row + 3][col] == i)) {
-                    //endGame(i); //a match has been made - run endGame for the player who had the match.
+                    endGame(i); //a match has been made - run endGame for the player who had the match.
                     return true; //stop checking for a win - the game is over.
                   }
                 }
@@ -189,7 +189,7 @@
 
                 if (gameBoard[row][col] == i) {
                   if ((gameBoard[row + 1][col + 1] == i) && (gameBoard[row + 2][col + 2] == i) && (gameBoard[row + 3][col + 3] == i)) {
-                    //endGame(i);
+                    endGame(i);
                     return true;
                   }
                 }
@@ -208,7 +208,7 @@
                 //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
                 if (gameBoard[row][col] == i) {
                   if ((gameBoard[row - 1][col + 1] == i) && (gameBoard[row - 2][col + 2] == i) && (gameBoard[row - 3][col + 3] == i)) {
-                    //endGame(i);
+                    endGame(i);
                     return true;
                   }
                 }
@@ -216,6 +216,18 @@
             }
           }
 			  }
+
+        /** This function will end the game */
+        function endGame(winner) {
+          isGameActive = false; // set the "game_active" to false, so that it can be started again.
+          document.getElementById('game_info').innerHTML = "Winner: Player " + winner;
+
+          // disable buttons
+          const allDropButtons = document.querySelectorAll('.drop');
+          allDropButtons.forEach((button) => {
+            button.setAttribute('disabled', 'disabled');
+          })
+        }
 
         /* this method will display who is the active player */
         function setUpTurn() {
