@@ -7,7 +7,7 @@
     <title>Connect Four Game</title>
     <link rel="stylesheet" href="board.css" />
   </head>
-  <body onload="beginGame();">
+  <body onload="startGame();">
     <div id="wrapper">
       <h3>Connect Four Game</h3>
       <p class="game_description">
@@ -89,7 +89,7 @@
         playerColor[1] = "red";
         playerColor[2] = "blue"
 
-        function beginGame() {
+        function startGame() {
           if (isGameActive == true) {
             return false;
           }
@@ -222,11 +222,10 @@
           isGameActive = false; // set the "game_active" to false, so that it can be started again.
           document.getElementById('game_info').innerHTML = "Winner: Player " + winner;
 
-          // disable buttons
-          const allDropButtons = document.querySelectorAll('.drop');
-          allDropButtons.forEach((button) => {
+          const allButtons = document.querySelectorAll('.drop');
+          allButtons.forEach((button) => {
             button.setAttribute('disabled', 'disabled');
-          })
+          });
         }
 
         /* this method will display who is the active player */
