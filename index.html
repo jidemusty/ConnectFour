@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
     <title>Connect Four Game</title>
     <link rel="stylesheet" href="board.css" />
   </head>
@@ -11,8 +14,8 @@
     <div id="wrapper">
       <h3 class="title">Connect Four Game</h3>
       <p class="game_description">
-        Connect Four is a game where players take turn dropping colored <br/>
-        circles in the top of the board, along different rows.  <br/>
+        Connect Four is a game where players take turn dropping colored <br />
+        circles in the top of the board, along different rows. <br />
         The goal is to make a row of 4 circles in a row - straight or diagnal.
       </p>
 
@@ -25,7 +28,8 @@
         -->
 
         <!-- The game_info div displays game info -->
-			  <div id="game_info"></div>
+        <div id="game_info"></div>
+        <div id="next_player"></div>
 
         <table id="game_table">
           <thead>
@@ -35,7 +39,7 @@
                 This could be programmatically generated like the rows/columns 
                 below, but since it was just 7, it wouldn't really save code. 
               -->
-              
+
               <td><button class="drop" onclick="drop(0);">Drop</button></td>
               <td><button class="drop" onclick="drop(1);">Drop</button></td>
               <td><button class="drop" onclick="drop(2);">Drop</button></td>
@@ -69,7 +73,11 @@
                 */
 
                 document.writeln(
-                  "<td id='square_" + row + "_" + col + "' class='board_square'></td>"
+                  "<td id='square_" +
+                    row +
+                    "_" +
+                    col +
+                    "' class='board_square'></td>"
                 );
               }
 
@@ -85,9 +93,9 @@
         let isGameActive = false;
         let activePlayer = 0;
 
-        let playerColor = []
+        let playerColor = [];
         playerColor[1] = "red";
-        playerColor[2] = "blue"
+        playerColor[2] = "blue";
 
         function startGame() {
           if (isGameActive == true) {
@@ -95,19 +103,19 @@
           }
 
           isGameActive = true;
-				
+
           for (row = 0; row <= 5; row++) {
             gameBoard[row] = [];
 
             for (col = 0; col <= 6; col++) {
               gameBoard[row][col] = 0;
-            }	
-          }		
-          
-          drawBoard(); // call the function to draw the board.				
+            }
+          }
+
+          drawBoard(); // call the function to draw the board.
           activePlayer = 1; //set the first player as their turn
           setUpTurn();
-			  }
+        }
 
         /* 
           This function will draw the board programmatically, 
@@ -126,9 +134,8 @@
                 player0, player1 and player2 so that the square will appear correctly.
               */
 
-              document.getElementById(
-                'square_' + row + '_' + col
-              ).innerHTML = "<span class='piece player" + gameBoard[row][col] + "'></span>";
+              document.getElementById("square_" + row + "_" + col).innerHTML =
+                "<span class='piece player" + gameBoard[row][col] + "'></span>";
             }
           }
         }
@@ -139,7 +146,7 @@
             Ultimately there are 4 ways to win => left-to-right, diagnol up, diagnol down, and top to bottom. 
             This function will check each of these situations twice - one for each player. 
           */
-          
+
           // check left-to-right => check for player 1 and 2
 
           for (let i = 1; i <= 2; i++) {
@@ -150,7 +157,11 @@
                 //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
 
                 if (gameBoard[row][col] == i) {
-                  if ((gameBoard[row][col + 1] == i) && (gameBoard[row][col + 2] == i) && (gameBoard[row][col + 3] == i)) {
+                  if (
+                    gameBoard[row][col + 1] == i &&
+                    gameBoard[row][col + 2] == i &&
+                    gameBoard[row][col + 3] == i
+                  ) {
                     endGame(i); //a match has been made, so run EndGame with the player that had the win
                     return true; //stop checking for a win - the game is over.
                   }
@@ -165,11 +176,14 @@
 
             for (col = 0; col <= 6; col++) {
               for (row = 0; row <= 2; row++) {
-
                 // check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
 
                 if (gameBoard[row][col] == i) {
-                  if ((gameBoard[row + 1][col] == i) && (gameBoard[row + 2][col] == i) && (gameBoard[row + 3][col] == i)) {
+                  if (
+                    gameBoard[row + 1][col] == i &&
+                    gameBoard[row + 2][col] == i &&
+                    gameBoard[row + 3][col] == i
+                  ) {
                     endGame(i); //a match has been made - run endGame for the player who had the match.
                     return true; //stop checking for a win - the game is over.
                   }
@@ -177,37 +191,22 @@
               }
             }
           }
-				
+
           // check diagnol down
           for (let i = 1; i <= 2; i++) {
             //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
 
-            for (col = 0; col <=3; col++) {
+            for (col = 0; col <= 3; col++) {
               //we also only need to check the bottom most columns - as the win must be upwards
               for (row = 0; row <= 2; row++) {
                 //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
 
                 if (gameBoard[row][col] == i) {
-                  if ((gameBoard[row + 1][col + 1] == i) && (gameBoard[row + 2][col + 2] == i) && (gameBoard[row + 3][col + 3] == i)) {
-                    endGame(i);
-                    return true;
-                  }
-                }
-              }
-            }
-				  }
-								
-          // check diagnol up
-          for (let i = 1; i <= 2; i++) {
-            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
-
-            for (col = 0; col <=3; col++) {
-              //we also only need to check the bottom most columns - as the win must be upwards
-
-              for (row = 3; row <= 5; row++) {
-                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
-                if (gameBoard[row][col] == i) {
-                  if ((gameBoard[row - 1][col + 1] == i) && (gameBoard[row - 2][col + 2] == i) && (gameBoard[row - 3][col + 3] == i)) {
+                  if (
+                    gameBoard[row + 1][col + 1] == i &&
+                    gameBoard[row + 2][col + 2] == i &&
+                    gameBoard[row + 3][col + 3] == i
+                  ) {
                     endGame(i);
                     return true;
                   }
@@ -216,26 +215,55 @@
             }
           }
 
-          isGameActive = false;
-          document.getElementById('game_info').innerHTML = "DRAW";
-			  }
+          // check diagnol up
+          for (let i = 1; i <= 2; i++) {
+            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
+
+            for (col = 0; col <= 3; col++) {
+              //we also only need to check the bottom most columns - as the win must be upwards
+
+              for (row = 3; row <= 5; row++) {
+                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
+                if (gameBoard[row][col] == i) {
+                  if (
+                    gameBoard[row - 1][col + 1] == i &&
+                    gameBoard[row - 2][col + 2] == i &&
+                    gameBoard[row - 3][col + 3] == i
+                  ) {
+                    endGame(i);
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+
+          document.getElementById("game_info").innerHTML = "Game Status: DRAW";
+        }
 
         /** This function will end the game */
         function endGame(winner) {
           isGameActive = false; // set the "game_active" to false, so that it can be started again.
-          document.getElementById('game_info').innerHTML = "Winner: Player " + winner;
+          document.getElementById("game_info").innerHTML =
+            "Winner: Player " + winner;
 
-          const allButtons = document.querySelectorAll('.drop');
-          allButtons.forEach((button) => {
-            button.setAttribute('disabled', 'disabled');
+          const allButtons = document.querySelectorAll(".drop");
+          allButtons.forEach(button => {
+            button.setAttribute("disabled", "disabled");
           });
         }
 
         /* this method will display who is the active player */
         function setUpTurn() {
           if (isGameActive) {
-            document.getElementById('game_info').innerHTML = 
-              "Current Player: " + activePlayer + " <span class='player" + activePlayer + "'>(" + playerColor[activePlayer] + ")</span>";
+            document.getElementById("next_player").innerHTML =
+              "Current Player: " +
+              activePlayer +
+              " <span class='player" +
+              activePlayer +
+              "'>(" +
+              playerColor[activePlayer] +
+              ")</span>";
           }
         }
 
@@ -250,8 +278,8 @@
             we search for the lowest point in this row that is available
             we're going to start from the bottom looking for an open slot
           */
-          
-          for (row = 5; row>=0; row--) {
+
+          for (row = 5; row >= 0; row--) {
             if (gameBoard[row][col] == 0) {
               // set the empty row to the active player's number
               gameBoard[row][col] = activePlayer;
@@ -260,11 +288,11 @@
               drawBoard();
 
               // change player's turn
-              activePlayer = activePlayer == 1 ? 2 : 1
+              activePlayer = activePlayer == 1 ? 2 : 1;
 
               // display active player
               setUpTurn();
-              
+
               return true;
             }
           }
