@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+    <title>Connect Four Game</title>
+    <link rel="stylesheet" href="board.css" />
+  </head>
+  <body onload="startGame();">
+    <div id="wrapper">
+      <h3 class="title">Connect Four Game</h3>
+      <p class="game_description">
+        Connect Four is a game where players take turn dropping colored <br />
+        circles in the top of the board, along different rows. <br />
+        The goal is to make a row of 4 circles in a row - straight or diagnal.
+      </p>
+
+      <div id="gameboard">
+        <!-- 
+          The game table is the actual board.  A table has rows and columns 
+          Divs or other HTML elements could be used too. The top row 
+          (and tablehead - 'thead') is reserved for the buttons to drop the 
+          game pieces. 
+        -->
+
+        <!-- The game_info div displays game info -->
+        <div id="game_info"></div>
+        <div id="next_player"></div>
+
+        <table id="game_table">
+          <thead>
+            <tr>
+              <!-- 
+                Set up the buttons that will drop the pieces in to the column.  
+                This could be programmatically generated like the rows/columns 
+                below, but since it was just 7, it wouldn't really save code. 
+              -->
+
+              <td><button class="drop" onclick="drop(0);">Drop</button></td>
+              <td><button class="drop" onclick="drop(1);">Drop</button></td>
+              <td><button class="drop" onclick="drop(2);">Drop</button></td>
+              <td><button class="drop" onclick="drop(3);">Drop</button></td>
+              <td><button class="drop" onclick="drop(4);">Drop</button></td>
+              <td><button class="drop" onclick="drop(5);">Drop</button></td>
+              <td><button class="drop" onclick="drop(6);">Drop</button></td>
+            </tr>
+          </thead>
+          <tr>
+            <td id="square_0_0" class="board_square"></td>
+            <td id="square_0_1" class="board_square"></td>
+            <td id="square_0_2" class="board_square"></td>
+            <td id="square_0_3" class="board_square"></td>
+            <td id="square_0_4" class="board_square"></td>
+            <td id="square_0_5" class="board_square"></td>
+            <td id="square_0_6" class="board_square"></td>
+          </tr>
+
+          <tr>
+            <td id="square_1_0" class="board_square"></td>
+            <td id="square_1_1" class="board_square"></td>
+            <td id="square_1_2" class="board_square"></td>
+            <td id="square_1_3" class="board_square"></td>
+            <td id="square_1_4" class="board_square"></td>
+            <td id="square_1_5" class="board_square"></td>
+            <td id="square_1_6" class="board_square"></td>
+          </tr>
+
+          <tr>
+            <td id="square_2_0" class="board_square"></td>
+            <td id="square_2_1" class="board_square"></td>
+            <td id="square_2_2" class="board_square"></td>
+            <td id="square_2_3" class="board_square"></td>
+            <td id="square_2_4" class="board_square"></td>
+            <td id="square_2_5" class="board_square"></td>
+            <td id="square_2_6" class="board_square"></td>
+          </tr>
+
+          <tr>
+            <td id="square_3_0" class="board_square"></td>
+            <td id="square_3_1" class="board_square"></td>
+            <td id="square_3_2" class="board_square"></td>
+            <td id="square_3_3" class="board_square"></td>
+            <td id="square_3_4" class="board_square"></td>
+            <td id="square_3_5" class="board_square"></td>
+            <td id="square_3_6" class="board_square"></td>
+          </tr>
+
+          <tr>
+            <td id="square_4_0" class="board_square"></td>
+            <td id="square_4_1" class="board_square"></td>
+            <td id="square_4_2" class="board_square"></td>
+            <td id="square_4_3" class="board_square"></td>
+            <td id="square_4_4" class="board_square"></td>
+            <td id="square_4_5" class="board_square"></td>
+            <td id="square_4_6" class="board_square"></td>
+          </tr>
+
+          <tr>
+            <td id="square_5_0" class="board_square"></td>
+            <td id="square_5_1" class="board_square"></td>
+            <td id="square_5_2" class="board_square"></td>
+            <td id="square_5_3" class="board_square"></td>
+            <td id="square_5_4" class="board_square"></td>
+            <td id="square_5_5" class="board_square"></td>
+            <td id="square_5_6" class="board_square"></td>
+          </tr>
+        </table>
+      </div>
+
+      <script>
+        let gameBoard = [];
+        let isGameActive = false;
+        let activePlayer = 0;
+
+        let playerColor = [];
+        playerColor[1] = "red";
+        playerColor[2] = "blue";
+
+        function startGame() {
+          if (isGameActive == true) {
+            return false;
+          }
+
+          isGameActive = true;
+
+          for (row = 0; row <= 5; row++) {
+            gameBoard[row] = [];
+
+            for (col = 0; col <= 6; col++) {
+              gameBoard[row][col] = 0;
+            }
+          }
+
+          drawBoard(); // call the function to draw the board.
+          activePlayer = 1; //set the first player as their turn
+          setUpTurn();
+        }
+
+        /* 
+          This function will draw the board programmatically, 
+          it will update each item to make sure it is the 
+          appropriate value 
+        */
+
+        function drawBoard() {
+          checkForWin();
+
+          for (col = 0; col <= 6; col++) {
+            for (row = 0; row <= 5; row++) {
+              /**
+                Set the inner HTML of the square (a td) to be a span with a class of 'piece'
+                and 'player' + the value of that gameboard piece. Using CSS, you can style
+                player0, player1 and player2 so that the square will appear correctly.
+              */
+
+              document.getElementById("square_" + row + "_" + col).innerHTML =
+                "<span class='piece player" + gameBoard[row][col] + "'></span>";
+            }
+          }
+        }
+
+        function checkForWin() {
+          /* 
+            Basically you want to check all possibility for a win.
+            Ultimately there are 4 ways to win => left-to-right, diagnol up, diagnol down, and top to bottom. 
+            This function will check each of these situations twice - one for each player. 
+          */
+
+          // check left-to-right => check for player 1 and 2
+
+          for (let i = 1; i <= 2; i++) {
+            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
+
+            for (col = 0; col <= 3; col++) {
+              for (row = 0; row <= 5; row++) {
+                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
+
+                if (gameBoard[row][col] == i) {
+                  if (
+                    gameBoard[row][col + 1] == i &&
+                    gameBoard[row][col + 2] == i &&
+                    gameBoard[row][col + 3] == i
+                  ) {
+                    endGame(i); //a match has been made, so run EndGame with the player that had the win
+                    return true; //stop checking for a win - the game is over.
+                  }
+                }
+              }
+            }
+          }
+
+          // check top-to-bottom
+          for (let i = 1; i <= 2; i++) {
+            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
+
+            for (col = 0; col <= 6; col++) {
+              for (row = 0; row <= 2; row++) {
+                // check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
+
+                if (gameBoard[row][col] == i) {
+                  if (
+                    gameBoard[row + 1][col] == i &&
+                    gameBoard[row + 2][col] == i &&
+                    gameBoard[row + 3][col] == i
+                  ) {
+                    endGame(i); //a match has been made - run endGame for the player who had the match.
+                    return true; //stop checking for a win - the game is over.
+                  }
+                }
+              }
+            }
+          }
+
+          // check diagnol down
+          for (let i = 1; i <= 2; i++) {
+            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
+
+            for (col = 0; col <= 3; col++) {
+              //we also only need to check the bottom most columns - as the win must be upwards
+              for (row = 0; row <= 2; row++) {
+                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
+
+                if (gameBoard[row][col] == i) {
+                  if (
+                    gameBoard[row + 1][col + 1] == i &&
+                    gameBoard[row + 2][col + 2] == i &&
+                    gameBoard[row + 3][col + 3] == i
+                  ) {
+                    endGame(i);
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+
+          // check diagnol up
+          for (let i = 1; i <= 2; i++) {
+            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
+
+            for (col = 0; col <= 3; col++) {
+              //we also only need to check the bottom most columns - as the win must be upwards
+
+              for (row = 3; row <= 5; row++) {
+                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
+                if (gameBoard[row][col] == i) {
+                  if (
+                    gameBoard[row - 1][col + 1] == i &&
+                    gameBoard[row - 2][col + 2] == i &&
+                    gameBoard[row - 3][col + 3] == i
+                  ) {
+                    endGame(i);
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+
+          document.getElementById("game_info").innerHTML = "Game Status: DRAW";
+        }
+
+        /** This function will end the game */
+        function endGame(winner) {
+          isGameActive = false; // set the "game_active" to false, so that it can be started again.
+          document.getElementById("game_info").innerHTML =
+            "Winner: Player " + winner;
+
+          const allButtons = document.querySelectorAll(".drop");
+          allButtons.forEach(button => {
+            button.setAttribute("disabled", "disabled");
+          });
+        }
+
+        /* this method will display who is the active player */
+        function setUpTurn() {
+          if (isGameActive) {
+            document.getElementById("next_player").innerHTML =
+              "Current Player: " +
+              activePlayer +
+              " <span class='player" +
+              activePlayer +
+              "'>(" +
+              playerColor[activePlayer] +
+              ")</span>";
+          }
+        }
+
+        /* 
+          this function implements the drop function.
+          a piece is dropped to the lowest available
+          column.
+        */
+
+        function drop(col) {
+          /* 
+            we search for the lowest point in this row that is available
+            we're going to start from the bottom looking for an open slot
+          */
+
+          for (row = 5; row >= 0; row--) {
+            if (gameBoard[row][col] == 0) {
+              // set the empty row to the active player's number
+              gameBoard[row][col] = activePlayer;
+
+              // draw board programmatically
+              drawBoard();
+
+              // change player's turn
+              activePlayer = activePlayer == 1 ? 2 : 1;
+
+              // display active player
+              setUpTurn();
+
+              return true;
+            }
+          }
+        }
+      </script>
+    </div>
+  </body>
+</html>
