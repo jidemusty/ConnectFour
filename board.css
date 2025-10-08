@@ -1,73 +1,356 @@
+:root {
+  --bg-1: linear-gradient(180deg, #f7f8fb, #e7edf3);
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #6b21a8; /* purple */
+  --board-deep: #0b3b5c; /* deep teal for the board */
+  --hole-shadow: rgba(0, 0, 0, 0.35);
+  --player1: #ef4444; /* red */
+  --player2: #2563eb; /* blue */
+}
+
 * {
   box-sizing: border-box;
-  font-family: 'Roboto';
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  background-color: burlywood;
+  font-family: Roboto, system-ui, -apple-system, "Segoe UI", Helvetica, Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 
 #wrapper {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   display: flex;
-  align-items: center;
+  gap: 20px;
+  align-items: center; /* center children horizontally so header/footer align */
   justify-content: center;
   flex-direction: column;
 }
 
+.title {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  letter-spacing: 0.4px;
+}
+
 .game_description {
   text-align: center;
-  font-size: 20px;
+  color: var(--muted);
+  margin: 6px 0 12px;
+  font-size: 15px;
 }
 
-.piece {
-  height: 25px;
-  width: 25px;
-  display: block;
-  border-radius: 16px;
-  margin-left: auto;
-  margin-right: auto;
+#gameboard {
+  margin: 0 auto;
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Player 0 (no player) will have a light-grey background */
-.player0 {
-  background-color: #DDDDDD;
+#game_info,
+#next_player {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 6px 0;
 }
 
-/* player 1 will have a purple background */
-.player1 {
-  background-color: red;
-  padding: 3px 10px;
-  color: white;
-}
-
-/* player 2 will have a orange background */
-.player2 {
-  background-color: blue;
-  padding: 3px 10px;
-  color: white;
-}
-
-/* 
-  set the board square to having a dark-grey border, 
-  and to be 36x36 square 
-*/
-.board_square {
-  border: 1px solid #555555;
-  height: 36px;
-  width: 36px;
+#game_info {
+  font-weight: 600;
+  color: #111827;
 }
 
 #game_table {
-  margin-top: 10px;
+  margin-top: 12px;
+  border-collapse: collapse;
 }
 
-.title {
-  background-color: purple;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 3px;
+/* style the drop buttons (thead) */
+thead td {
+  padding: 6px;
+}
+
+.drop {
+  min-width: 56px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #fff, #f3f4f6);
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 120ms ease;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.06);
+}
+
+.drop:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+.drop:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.drop:focus {
+  outline: 3px solid rgba(99, 102, 241, 0.12);
+  outline-offset: 2px;
+}
+
+.drop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.drop.col-full {
+  background: #f1f5f9;
+}
+
+/* board look: rounded rectangle with holes */
+table#game_table {
+  background: var(--board-deep);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+tbody tr {
+  height: 56px;
+}
+
+.board_square {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  margin: 4px;
+  border-radius: 8px;
+  box-shadow: inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+  background: radial-gradient(
+      circle at 50% 30%,
+      rgba(255, 255, 255, 0.02),
+      transparent 25%
+    ),
+    linear-gradient(180deg, #0b3b5c, #06324d);
+  text-align: center;
+  display: flex; /* use flexbox to perfectly center pieces */
+  align-items: center;
+  justify-content: center;
+}
+
+.board_square .piece {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* piece appearance */
+.piece {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.3, 1),
+    box-shadow 260ms ease;
+  transform: none;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.16);
+  background: linear-gradient(180deg, #fff8, rgba(0, 0, 0, 0.08));
+}
+
+.player0 {
+  background: #cbd5e1;
+  box-shadow: none;
+}
+
+.player1 {
+  background: radial-gradient(circle at 35% 30%, #fff6, var(--player1));
+  padding: 2px 4px;
+}
+
+.player2 {
+  background: radial-gradient(circle at 35% 30%, #fff6, var(--player2));
+  padding: 2px 4px;
+}
+
+/* appear animation: when a piece is present we bring it down */
+.board_square .piece {
+  transform: translateY(0);
+}
+
+/* winning highlight */
+.board_square.win {
+  box-shadow: 0 0 28px 6px rgba(245, 158, 11, 0.12),
+    inset 0 0 0 3px rgba(245, 158, 11, 0.06);
+  transform: scale(1.02);
+}
+
+.board_square.win .piece {
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* restart button */
+#restart {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent), #4c1d95);
+  box-shadow: 0 8px 26px rgba(99, 102, 241, 0.12);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+#restart:hover {
+  transform: translateY(-2px);
+  opacity: 0.98;
+}
+
+/* responsive */
+@media (max-width: 600px) {
+  .board_square {
+    width: 44px;
+    height: 44px;
+  }
+  .piece {
+    width: 30px;
+    height: 30px;
+  }
+  .drop {
+    min-width: 44px;
+    padding: 6px 8px;
+  }
+  #wrapper {
+    padding: 10px;
+  }
+}
+
+/* grid layout for the board */
+.grid-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.grid-top {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* the actual board grid: use --cols set on the element to create columns */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 56px);
+  grid-auto-rows: 56px;
+  gap: 8px;
+  justify-content: center; /* center grid in container */
+  align-items: center;
+}
+
+.drop {
+  min-width: 56px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #fff, #f3f4f6);
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 120ms ease;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.06);
+}
+.drop.focused {
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.18);
+  transform: translateY(-4px);
+}
+
+/* toolbar and footer */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.toolbar button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #111827;
+  color: #fff;
+}
+
+.toolbar label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.toggle span {
+  color: var(--muted);
+}
+
+.site-header .controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-footer {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+/* theme: dark mode */
+:root[data-theme="dark"] {
+  --bg-1: linear-gradient(180deg, #0f1724, #071024);
+  --card: #071023;
+  --muted: #9ca3af;
+  --accent: #8b5cf6;
+  --board-deep: #071e2b;
+}
+
+/* scoreboard */
+#scoreboard {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 14px;
 }

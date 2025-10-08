@@ -10,13 +10,23 @@
     <title>Connect Four Game</title>
     <link rel="stylesheet" href="board.css" />
   </head>
-  <body onload="startGame();">
+  <body>
     <div id="wrapper">
-      <h3 class="title">Connect Four Game</h3>
+      <header class="site-header">
+        <div class="title">Connect Four Game</div>
+        <div class="controls">
+          <label class="toggle">
+            <input id="themeToggle" type="checkbox" />
+            <span>Dark</span>
+          </label>
+          <div id="scoreboard" aria-live="polite"></div>
+        </div>
+      </header>
+
       <p class="game_description">
-        Connect Four is a game where players take turn dropping colored <br />
-        circles in the top of the board, along different rows. <br />
-        The goal is to make a row of 4 circles in a row - straight or diagnal.
+        Connect Four is a game where players take turns dropping colored discs
+        into columns. The first to connect four in a row — horizontally,
+        vertically, or diagonally — wins.
       </p>
 
       <div id="gameboard">
@@ -28,275 +38,424 @@
         -->
 
         <!-- The game_info div displays game info -->
-        <div id="game_info"></div>
-        <div id="next_player"></div>
+        <div id="game_info" aria-live="polite"></div>
+        <div id="next_player" aria-live="polite"></div>
 
-        <table id="game_table">
-          <thead>
-            <tr>
-              <!-- 
-                Set up the buttons that will drop the pieces in to the column.  
-                This could be programmatically generated like the rows/columns 
-                below, but since it was just 7, it wouldn't really save code. 
-              -->
+        <div class="toolbar">
+          <button id="restart" type="button">Restart</button>
+          <label class="history-toggle"
+            ><input id="historyToggle" type="checkbox" /> Enable history</label
+          >
+          <button id="undo" type="button" disabled>Undo</button>
+          <button id="redo" type="button" disabled>Redo</button>
+        </div>
 
-              <td><button class="drop" onclick="drop(0);">Drop</button></td>
-              <td><button class="drop" onclick="drop(1);">Drop</button></td>
-              <td><button class="drop" onclick="drop(2);">Drop</button></td>
-              <td><button class="drop" onclick="drop(3);">Drop</button></td>
-              <td><button class="drop" onclick="drop(4);">Drop</button></td>
-              <td><button class="drop" onclick="drop(5);">Drop</button></td>
-              <td><button class="drop" onclick="drop(6);">Drop</button></td>
-            </tr>
-          </thead>
-
-          <script>
-            /**
-              To make the code much more compact, javascript will actually be used 
-              to write the code for the game board. I used "row" and "col" I then set the 
-              value to 0. 
-            */
-
-            for (var row = 0; row <= 5; row++) {
-              /*
-                document.writeln() function will write HTML code to the browser.  
-                If you "inspect" this page after the browser has rendered the 
-                page, you will see a bunch of HTML write the start of the table row tag
-              */
-
-              document.writeln("<tr>");
-
-              for (var col = 0; col <= 6; col++) {
-                /**
-                  write each table data element - with the row and col variables in the 
-                  ID so it can be accessed later.
-                */
-
-                document.writeln(
-                  "<td id='square_" +
-                    row +
-                    "_" +
-                    col +
-                    "' class='board_square'></td>"
-                );
-              }
-
-              // write the closing table row tag.
-              document.writeln("</tr>");
-            }
-          </script>
-        </table>
+        <div id="game_table" class="grid-board" role="application">
+          <div class="grid-top" role="toolbar" aria-label="Drop controls">
+            <!-- drop buttons generated in JS for accessibility -->
+          </div>
+          <div
+            id="game_grid"
+            class="grid"
+            role="grid"
+            aria-label="Connect Four board"
+          ></div>
+        </div>
       </div>
 
+      <footer class="site-footer">
+        <small
+          >Use ← and → to pick a column, press Enter to drop. Toggle history to
+          enable undo/redo. Theme and scores persist in your browser.</small
+        >
+      </footer>
+
       <script>
-        let gameBoard = [];
-        let isGameActive = false;
-        let activePlayer = 0;
+        class ConnectFour {
+          constructor(rows = 6, cols = 7) {
+            this.rows = rows;
+            this.cols = cols;
+            this.board = Array.from({ length: rows }, () =>
+              Array(cols).fill(0)
+            );
+            this.isActive = false;
+            this.activePlayer = 0;
+            this.playerColors = { 1: "red", 2: "blue" };
 
-        let playerColor = [];
-        playerColor[1] = "red";
-        playerColor[2] = "blue";
+            // history (undo/redo)
+            this.historyEnabled = false;
+            this.history = [];
+            this.future = [];
 
-        function startGame() {
-          if (isGameActive == true) {
+            // DOM elements
+            this.infoEl = document.getElementById("game_info");
+            this.nextEl = document.getElementById("next_player");
+            this.gridContainer = document.getElementById("game_grid");
+            this.dropToolbar = document.querySelector(".grid-top");
+            this.restartBtn = document.getElementById("restart");
+            this.historyToggle = document.getElementById("historyToggle");
+            this.undoBtn = document.getElementById("undo");
+            this.redoBtn = document.getElementById("redo");
+            this.scoreboardEl = document.getElementById("scoreboard");
+
+            // keyboard nav
+            this.focusCol = 0;
+          }
+
+          start() {
+            this.loadScores();
+            this.restart();
+            this.attachUI();
+          }
+
+          restart() {
+            this.isActive = true;
+            this.activePlayer = 1;
+            this.board = Array.from({ length: this.rows }, () =>
+              Array(this.cols).fill(0)
+            );
+            this.history = [];
+            this.future = [];
+            this.renderGrid();
+            this.renderDropControls();
+            this.updateButtons();
+            this.setUpTurn();
+            this.infoEl.textContent = "Game Status: In progress";
+          }
+
+          attachUI() {
+            // restart
+            this.restartBtn.addEventListener("click", () => this.restart());
+
+            // history toggle
+            this.historyToggle.addEventListener("change", (e) => {
+              this.historyEnabled = e.target.checked;
+              if (!this.historyEnabled) {
+                this.history = [];
+                this.future = [];
+                this.updateButtons();
+              }
+            });
+
+            // undo/redo
+            this.undoBtn.addEventListener("click", () => this.undo());
+            this.redoBtn.addEventListener("click", () => this.redo());
+
+            // keyboard controls
+            document.addEventListener("keydown", (e) => this.handleKey(e));
+
+            // theme toggle
+            const themeToggle = document.getElementById("themeToggle");
+            const theme = localStorage.getItem("cf_theme") || "light";
+            if (theme === "dark") themeToggle.checked = true;
+            this.applyTheme(themeToggle.checked ? "dark" : "light");
+            themeToggle.addEventListener("change", (e) => {
+              const t = e.target.checked ? "dark" : "light";
+              this.applyTheme(t);
+              localStorage.setItem("cf_theme", t);
+            });
+          }
+
+          applyTheme(name) {
+            document.documentElement.setAttribute("data-theme", name);
+          }
+
+          renderDropControls() {
+            this.dropToolbar.innerHTML = "";
+            for (let c = 0; c < this.cols; c++) {
+              const btn = document.createElement("button");
+              btn.className = "drop";
+              btn.dataset.col = String(c);
+              btn.setAttribute("aria-label", `Drop in column ${c + 1}`);
+              btn.textContent = "Drop";
+              btn.addEventListener("click", () => this.handleDrop(c));
+              this.dropToolbar.appendChild(btn);
+            }
+            this.updateColumnButtons();
+          }
+
+          renderGrid() {
+            this.gridContainer.innerHTML = "";
+            this.gridContainer.style.setProperty("--cols", this.cols);
+            for (let r = 0; r < this.rows; r++) {
+              for (let c = 0; c < this.cols; c++) {
+                const cell = document.createElement("div");
+                cell.id = `square_${r}_${c}`;
+                cell.className = "board_square";
+                cell.setAttribute("role", "gridcell");
+                cell.setAttribute("aria-colindex", String(c + 1));
+                cell.setAttribute("aria-rowindex", String(r + 1));
+                cell.innerHTML = `<span class="piece player${this.board[r][c]}"></span>`;
+                this.gridContainer.appendChild(cell);
+              }
+            }
+          }
+
+          handleDrop(col) {
+            if (!this.isActive) return;
+            // if history enabled, push snapshot
+            if (this.historyEnabled) this.pushHistory();
+            const moved = this.drop(col);
+            if (moved && this.historyEnabled) this.future = [];
+            this.updateButtons();
+          }
+
+          handleKey(e) {
+            if (!this.isActive) return;
+            if (e.key === "ArrowLeft") {
+              this.focusCol = (this.focusCol - 1 + this.cols) % this.cols;
+              this.highlightFocus();
+              e.preventDefault();
+            } else if (e.key === "ArrowRight") {
+              this.focusCol = (this.focusCol + 1) % this.cols;
+              this.highlightFocus();
+              e.preventDefault();
+            } else if (e.key === "Enter") {
+              this.handleDrop(this.focusCol);
+              e.preventDefault();
+            }
+          }
+
+          highlightFocus() {
+            // visual focus on top buttons
+            const buttons = Array.from(this.dropToolbar.children);
+            buttons.forEach((b, i) =>
+              b.classList.toggle("focused", i === this.focusCol)
+            );
+          }
+
+          pushHistory() {
+            this.history.push(
+              JSON.stringify({
+                board: this.cloneBoard(),
+                player: this.activePlayer,
+              })
+            );
+            if (this.history.length > 200) this.history.shift();
+            this.updateButtons();
+          }
+
+          undo() {
+            if (!this.historyEnabled || this.history.length === 0) return;
+            const snapshot = this.history.pop();
+            this.future.push(
+              JSON.stringify({
+                board: this.cloneBoard(),
+                player: this.activePlayer,
+              })
+            );
+            const state = JSON.parse(snapshot);
+            this.board = state.board;
+            this.activePlayer = state.player;
+            this.renderGrid();
+            this.updateButtons();
+            this.setUpTurn();
+          }
+
+          redo() {
+            if (!this.historyEnabled || this.future.length === 0) return;
+            const snapshot = this.future.pop();
+            this.history.push(
+              JSON.stringify({
+                board: this.cloneBoard(),
+                player: this.activePlayer,
+              })
+            );
+            const state = JSON.parse(snapshot);
+            this.board = state.board;
+            this.activePlayer = state.player;
+            this.renderGrid();
+            this.updateButtons();
+            this.setUpTurn();
+          }
+
+          updateButtons() {
+            // update undo/redo availability
+            this.undoBtn.disabled = !(
+              this.historyEnabled && this.history.length > 0
+            );
+            this.redoBtn.disabled = !(
+              this.historyEnabled && this.future.length > 0
+            );
+            this.updateColumnButtons();
+            this.updateScoreboard();
+          }
+
+          cloneBoard() {
+            return this.board.map((r) => r.slice());
+          }
+
+          drawBoard() {
+            for (let r = 0; r < this.rows; r++) {
+              for (let c = 0; c < this.cols; c++) {
+                const el = document.getElementById(`square_${r}_${c}`);
+                if (el) {
+                  el.classList.remove("win");
+                  el.innerHTML = `<span class="piece player${this.board[r][c]}"></span>`;
+                }
+              }
+            }
+
+            const win = this.checkForWin();
+            if (win) {
+              this.endGame(win.player, win.coords);
+              return;
+            }
+
+            const isFull = this.board.every((row) =>
+              row.every((cell) => cell !== 0)
+            );
+            if (isFull) {
+              this.infoEl.textContent = "Game Status: DRAW";
+              this.dropToolbar
+                .querySelectorAll(".drop")
+                .forEach((b) => (b.disabled = true));
+              return;
+            }
+
+            this.infoEl.textContent = "Game Status: In progress";
+            this.updateColumnButtons();
+          }
+
+          // returns { player, coords } or null
+          checkForWin() {
+            const dirs = [
+              { dr: 0, dc: 1 },
+              { dr: 1, dc: 0 },
+              { dr: 1, dc: 1 },
+              { dr: -1, dc: 1 },
+            ];
+            for (let p = 1; p <= 2; p++) {
+              for (let r = 0; r < this.rows; r++) {
+                for (let c = 0; c < this.cols; c++) {
+                  if (this.board[r][c] !== p) continue;
+                  for (const { dr, dc } of dirs) {
+                    const coords = [[r, c]];
+                    let ok = true;
+                    for (let k = 1; k < 4; k++) {
+                      const rr = r + dr * k;
+                      const cc = c + dc * k;
+                      if (
+                        rr < 0 ||
+                        rr >= this.rows ||
+                        cc < 0 ||
+                        cc >= this.cols ||
+                        this.board[rr][cc] !== p
+                      ) {
+                        ok = false;
+                        break;
+                      }
+                      coords.push([rr, cc]);
+                    }
+                    if (ok) return { player: p, coords };
+                  }
+                }
+              }
+            }
+            return null;
+          }
+
+          endGame(winner, coords = []) {
+            this.isActive = false;
+            this.infoEl.textContent = `Winner: Player ${winner} (${
+              this.playerColors[this.activePlayer]
+            })`;
+            coords.forEach(([r, c]) => {
+              const el = document.getElementById(`square_${r}_${c}`);
+              if (el) el.classList.add("win");
+            });
+            this.dropToolbar
+              .querySelectorAll(".drop")
+              .forEach((b) => (b.disabled = true));
+            this.saveWin(winner);
+            this.updateScoreboard();
+          }
+
+          setUpTurn() {
+            if (!this.isActive) return;
+            this.nextEl.innerHTML = `Current Player: ${
+              this.activePlayer
+            } <span class='player${this.activePlayer}'>${
+              this.playerColors[this.activePlayer]
+            }</span>`;
+          }
+
+          handleDrop(col) {
+            if (!this.isActive) return false;
+            for (let r = this.rows - 1; r >= 0; r--) {
+              if (this.board[r][col] === 0) {
+                this.board[r][col] = this.activePlayer;
+                this.drawBoard();
+                this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+                this.setUpTurn();
+                return true;
+              }
+            }
+            const btn = this.dropToolbar.querySelector(
+              `.drop[data-col="${col}"]`
+            );
+            if (btn) {
+              btn.disabled = true;
+              btn.title = "Column full";
+            }
             return false;
           }
 
-          isGameActive = true;
-
-          for (row = 0; row <= 5; row++) {
-            gameBoard[row] = [];
-
-            for (col = 0; col <= 6; col++) {
-              gameBoard[row][col] = 0;
-            }
+          drop(col) {
+            return this.handleDrop(col);
           }
 
-          drawBoard(); // call the function to draw the board.
-          activePlayer = 1; //set the first player as their turn
-          setUpTurn();
-        }
-
-        /* 
-          This function will draw the board programmatically, 
-          it will update each item to make sure it is the 
-          appropriate value 
-        */
-
-        function drawBoard() {
-          checkForWin();
-
-          for (col = 0; col <= 6; col++) {
-            for (row = 0; row <= 5; row++) {
-              /**
-                Set the inner HTML of the square (a td) to be a span with a class of 'piece'
-                and 'player' + the value of that gameboard piece. Using CSS, you can style
-                player0, player1 and player2 so that the square will appear correctly.
-              */
-
-              document.getElementById("square_" + row + "_" + col).innerHTML =
-                "<span class='piece player" + gameBoard[row][col] + "'></span>";
-            }
-          }
-        }
-
-        function checkForWin() {
-          /* 
-            Basically you want to check all possibility for a win.
-            Ultimately there are 4 ways to win => left-to-right, diagnol up, diagnol down, and top to bottom. 
-            This function will check each of these situations twice - one for each player. 
-          */
-
-          // check left-to-right => check for player 1 and 2
-
-          for (let i = 1; i <= 2; i++) {
-            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
-
-            for (col = 0; col <= 3; col++) {
-              for (row = 0; row <= 5; row++) {
-                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
-
-                if (gameBoard[row][col] == i) {
-                  if (
-                    gameBoard[row][col + 1] == i &&
-                    gameBoard[row][col + 2] == i &&
-                    gameBoard[row][col + 3] == i
-                  ) {
-                    endGame(i); //a match has been made, so run EndGame with the player that had the win
-                    return true; //stop checking for a win - the game is over.
-                  }
-                }
+          updateColumnButtons() {
+            const buttons = Array.from(
+              this.dropToolbar.querySelectorAll(".drop")
+            );
+            buttons.forEach((btn) => {
+              const col = Number(btn.dataset.col);
+              const top = this.board[0][col];
+              if (top !== 0) {
+                btn.disabled = true;
+                btn.classList.add("col-full");
+                btn.title = "Column full";
+              } else {
+                btn.disabled = false;
+                btn.classList.remove("col-full");
+                btn.title = `Drop a piece into column ${col + 1}`;
               }
-            }
+            });
           }
 
-          // check top-to-bottom
-          for (let i = 1; i <= 2; i++) {
-            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
-
-            for (col = 0; col <= 6; col++) {
-              for (row = 0; row <= 2; row++) {
-                // check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
-
-                if (gameBoard[row][col] == i) {
-                  if (
-                    gameBoard[row + 1][col] == i &&
-                    gameBoard[row + 2][col] == i &&
-                    gameBoard[row + 3][col] == i
-                  ) {
-                    endGame(i); //a match has been made - run endGame for the player who had the match.
-                    return true; //stop checking for a win - the game is over.
-                  }
-                }
-              }
-            }
+          // scoring / persistence
+          saveWin(player) {
+            const key = "cf_scores_v1";
+            const scores = JSON.parse(
+              localStorage.getItem(key) || '{"1":0,"2":0}'
+            );
+            scores[player] = (scores[player] || 0) + 1;
+            localStorage.setItem(key, JSON.stringify(scores));
           }
 
-          // check diagnol down
-          for (let i = 1; i <= 2; i++) {
-            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
-
-            for (col = 0; col <= 3; col++) {
-              //we also only need to check the bottom most columns - as the win must be upwards
-              for (row = 0; row <= 2; row++) {
-                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
-
-                if (gameBoard[row][col] == i) {
-                  if (
-                    gameBoard[row + 1][col + 1] == i &&
-                    gameBoard[row + 2][col + 2] == i &&
-                    gameBoard[row + 3][col + 3] == i
-                  ) {
-                    endGame(i);
-                    return true;
-                  }
-                }
-              }
-            }
+          loadScores() {
+            const key = "cf_scores_v1";
+            const scores = JSON.parse(
+              localStorage.getItem(key) || '{"1":0,"2":0}'
+            );
+            this.scores = scores;
+            this.updateScoreboard();
           }
 
-          // check diagnol up
-          for (let i = 1; i <= 2; i++) {
-            //since a winning row must be 4 long, we only need to check the first 3 rows, 0, 1, and 2
-
-            for (col = 0; col <= 3; col++) {
-              //we also only need to check the bottom most columns - as the win must be upwards
-
-              for (row = 3; row <= 5; row++) {
-                //check to see if the gameboard item is set to the player we are checking, if so, lets check the next 3 for a match
-                if (gameBoard[row][col] == i) {
-                  if (
-                    gameBoard[row - 1][col + 1] == i &&
-                    gameBoard[row - 2][col + 2] == i &&
-                    gameBoard[row - 3][col + 3] == i
-                  ) {
-                    endGame(i);
-                    return true;
-                  }
-                }
-              }
-            }
-          }
-
-          document.getElementById("game_info").innerHTML = "Game Status: DRAW";
-        }
-
-        /** This function will end the game */
-        function endGame(winner) {
-          isGameActive = false; // set the "game_active" to false, so that it can be started again.
-          document.getElementById("game_info").innerHTML =
-            "Winner: Player " + winner;
-
-          const allButtons = document.querySelectorAll(".drop");
-          allButtons.forEach(button => {
-            button.setAttribute("disabled", "disabled");
-          });
-        }
-
-        /* this method will display who is the active player */
-        function setUpTurn() {
-          if (isGameActive) {
-            document.getElementById("next_player").innerHTML =
-              "Current Player: " +
-              activePlayer +
-              " <span class='player" +
-              activePlayer +
-              "'>(" +
-              playerColor[activePlayer] +
-              ")</span>";
+          updateScoreboard() {
+            const key = "cf_scores_v1";
+            const scores = JSON.parse(
+              localStorage.getItem(key) || '{"1":0,"2":0}'
+            );
+            this.scoreboardEl.innerHTML = `Score — Player 1: ${
+              scores[1] || 0
+            } - Player 2: ${scores[2] || 0}`;
           }
         }
 
-        /* 
-          this function implements the drop function.
-          a piece is dropped to the lowest available
-          column.
-        */
-
-        function drop(col) {
-          /* 
-            we search for the lowest point in this row that is available
-            we're going to start from the bottom looking for an open slot
-          */
-
-          for (row = 5; row >= 0; row--) {
-            if (gameBoard[row][col] == 0) {
-              // set the empty row to the active player's number
-              gameBoard[row][col] = activePlayer;
-
-              // draw board programmatically
-              drawBoard();
-
-              // change player's turn
-              activePlayer = activePlayer == 1 ? 2 : 1;
-
-              // display active player
-              setUpTurn();
-
-              return true;
-            }
-          }
-        }
+        const game = new ConnectFour();
+        document.addEventListener("DOMContentLoaded", () => game.start());
       </script>
     </div>
   </body>
